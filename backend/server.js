@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
 app.use("/api/pico_setting", require("./api/pico_setting"));
 app.use("/api/pico_status", require("./api/pico_status"));
