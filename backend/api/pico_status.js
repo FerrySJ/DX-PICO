@@ -1,21 +1,24 @@
 const express = require("express");
 const sequelize = require("../instance/db");
-const schedule = require("node-schedule");
-const moment = require("moment");
+const cron = require('node-cron');
+const moment = require('moment-timezone');
 
 const router = express.Router();
-schedule.scheduleJob("0 7 * * *", async () => {
+
+cron.schedule('0 7 * * *', async () => {
     let dateToday;
-    let hours = parseInt(moment().format("HH"), 10);
+    const hours = parseInt(moment().tz('Asia/Bangkok').format('HH'), 10);
+
     if (hours <= 7) {
-        dateToday = moment().subtract(1, "days").format("YYYY-MM-DD");
+        dateToday = moment().tz('Asia/Bangkok').subtract(1, "days").format("YYYY-MM-DD");
     } else {
-        dateToday = moment().format("YYYY-MM-DD");
+        dateToday = moment().tz('Asia/Bangkok').format("YYYY-MM-DD");
     }
 
-    let dataDailyStatusReport = await getDailyStatusReport(dateToday);
-    console.log("Running task at:", moment().format("YYYY-MM-DD HH:mm:ss"));
-    console.log(dataDailyStatusReport);
+    await getDailyStatusReport(dateToday);
+    console.log("Running data status cron job for date:", dateToday, hours, moment().format("HH:mm:ss"));
+}, {
+    timezone: "Asia/Bangkok"
 });
 
 const getDailyStatusReport = async (dateQuery) => {
