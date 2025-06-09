@@ -7,7 +7,7 @@ const moment = require('moment-timezone');
 
 const router = express.Router();
 
-cron.schedule('10 10 * * *', async () => {
+cron.schedule('20 10 * * *', async () => {
     let dateToday;
     const hours = parseInt(moment().tz('Asia/Bangkok').format('HH'), 10);
 
@@ -163,7 +163,7 @@ const getDailySettingReport = async (dateQuery) => {
                     SELECT
                         1
                     FROM
-            [NHT_DX_TO_PICO].[dbo].[DAILY_STATUS_REPORT]
+            [NHT_DX_TO_PICO].[dbo].[SETTING]
                     WHERE
             [line_name] = '${result[index].line_no}'
                         AND [machine_name] = '${result[index].mc_no}'
