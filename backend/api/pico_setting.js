@@ -7,7 +7,7 @@ const moment = require('moment-timezone');
 
 const router = express.Router();
 
-cron.schedule('0 10 * * *', async () => {
+cron.schedule('10 10 * * *', async () => {
     let dateToday;
     const hours = parseInt(moment().tz('Asia/Bangkok').format('HH'), 10);
 
@@ -22,6 +22,7 @@ cron.schedule('0 10 * * *', async () => {
 }, {
     timezone: "Asia/Bangkok"
 });
+
 // schedule.scheduleJob("-0 7 * * *", async () => {
 //     let dateToday;
 //     let hours = parseInt(moment().format("HH"), 10);
