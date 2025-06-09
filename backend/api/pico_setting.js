@@ -1,22 +1,40 @@
 const express = require("express");
 const sequelize = require("../instance/db");
-const schedule = require("node-schedule");
-const moment = require("moment");
+// const schedule = require("node-schedule");
+// const moment = require("moment");
+const cron = require('node-cron');
+const moment = require('moment-timezone');
 
 const router = express.Router();
-schedule.scheduleJob("-0 7 * * *", async () => {
+
+cron.schedule('0 10 * * *', async () => {
     let dateToday;
-    let hours = parseInt(moment().format("HH"), 10);
+    const hours = parseInt(moment().tz('Asia/Bangkok').format('HH'), 10);
+
     if (hours <= 7) {
-        dateToday = moment().subtract(1, "days").format("YYYY-MM-DD");
+        dateToday = moment().tz('Asia/Bangkok').subtract(1, "days").format("YYYY-MM-DD");
     } else {
-        dateToday = moment().format("YYYY-MM-DD");
+        dateToday = moment().tz('Asia/Bangkok').format("YYYY-MM-DD");
     }
 
     let dataDailyStatusReport = await getDailySettingReport(dateToday);
-    console.log("Running task at:", moment().format("YYYY-MM-DD HH:mm:ss"));
-    console.log(dataDailyStatusReport);
+    console.log("Running cron job for date:", dateToday, hours, moment().format("HH:mm:ss"));
+}, {
+    timezone: "Asia/Bangkok"
 });
+// schedule.scheduleJob("-0 7 * * *", async () => {
+//     let dateToday;
+//     let hours = parseInt(moment().format("HH"), 10);
+//     if (hours <= 7) {
+//         dateToday = moment().subtract(1, "days").format("YYYY-MM-DD");
+//     } else {
+//         dateToday = moment().format("YYYY-MM-DD");
+//     }
+
+//     let dataDailyStatusReport = await getDailySettingReport(dateToday);
+//     console.log("Running task at:", moment().format("YYYY-MM-DD HH:mm:ss"));
+//     console.log(dataDailyStatusReport);
+// });
 
 const getDailySettingReport = async (dateQuery) => {
     dateToday = dateQuery;
@@ -129,7 +147,7 @@ const getDailySettingReport = async (dateQuery) => {
             for (let index = 0; index < result.length; index++) {
                 await sequelize.query(
                     `
-            INSERT INTO[NHT_DX_TO_PICO].[dbo].[DAILY_STATUS_REPORT] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
+            INSERT INTO [NHT_DX_TO_PICO].[dbo].[SETTING] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
             SELECT
                 '${result[index].process}',
                 '${result[index].line_no}',
