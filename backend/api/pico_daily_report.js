@@ -5,6 +5,8 @@ const moment = require('moment-timezone');
 
 const router = express.Router();
 
+//* ไม่ run 7:00 เพราะ data เข้า DB ไม่ทัน
+
 cron.schedule('1 7 * * *', async () => {
     let dateToday;
     const hours = parseInt(moment().tz('Asia/Bangkok').format('HH'), 10);
@@ -126,7 +128,7 @@ const getDailyReport = async (dateQuery) => {
                 machine_name
 `
         );
-        console.log("data prod...", data[0]);
+        // console.log("data prod...", data[0]);
 
         // STEP INSERT DATA
         if (data[0].length > 0) {
