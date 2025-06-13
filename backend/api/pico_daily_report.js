@@ -136,7 +136,7 @@ const getDailyReport = async (dateQuery) => {
             for (let i = 0; i < result.length; i++) {
                 await sequelize.query(
                     `
-                INSERT INTO  [NHT_DX_TO_PICO].[dbo].[DAILY_REPORT] (
+                INSERT INTO  [NHT_DX_TO_PICO].[dbo].[GD2ND_DAILY_REPORT] (
                     [operation_day], [is_operation_day], [process], [line_name], [machine_name],
                     [daily_target_production_qty], [daily_actual_production_qty], [shift1_actual_production_qty],
                     [shift1_target_production_qty], [shift2_actual_production_qty], [shift2_target_production_qty],
@@ -149,7 +149,7 @@ const getDailyReport = async (dateQuery) => {
                     ${result[i].shift3_actual_production_qty}, ${result[i].shift3_target_production_qty}, GETDATE()
                 WHERE NOT EXISTS (
                     SELECT 1
-                    FROM  [NHT_DX_TO_PICO].[dbo].[DAILY_REPORT]
+                    FROM  [NHT_DX_TO_PICO].[dbo].[GD2ND_DAILY_REPORT]
                     WHERE
                         [operation_day] = '${result[i].operation_day}'
                         AND [line_name] = '${result[i].line_name}'

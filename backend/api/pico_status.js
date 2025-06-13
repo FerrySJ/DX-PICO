@@ -269,7 +269,7 @@ const getDailyStatusReport = async (dateQuery) => {
             for (let index = 0; index < result.length; index++) {
                 await sequelize.query(
                     `
-            INSERT INTO[NHT_DX_TO_PICO].[dbo].[DAILY_STATUS_REPORT] ([operation_day],[is_operation_day],[process],[line_name],[machine_name],[status_name],[daily_duration_s],[daily_count],[shift1_duration_s],[shift1_count],[shift2_duration_s],[shift2_count],[shift3_duration_s],[shift3_count],[registered_at])
+            INSERT INTO[NHT_DX_TO_PICO].[dbo].[GD2ND_DAILY_STATUS_REPORT] ([operation_day],[is_operation_day],[process],[line_name],[machine_name],[status_name],[daily_duration_s],[daily_count],[shift1_duration_s],[shift1_count],[shift2_duration_s],[shift2_count],[shift3_duration_s],[shift3_count],[registered_at])
             SELECT
                 '${result[index].operation_day}',
                 '${result[index].is_operation_day}',
@@ -291,7 +291,7 @@ const getDailyStatusReport = async (dateQuery) => {
                     SELECT
                         1
                     FROM
-            [NHT_DX_TO_PICO].[dbo].[DAILY_STATUS_REPORT]
+            [NHT_DX_TO_PICO].[dbo].[GD2ND_DAILY_STATUS_REPORT]
                     WHERE
             [operation_day] = '${result[index].operation_day}'
                         AND [line_name] = '${result[index].line_name}'

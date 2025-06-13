@@ -138,7 +138,7 @@ const getDailySettingReport = async () => {
                                   ,[count_factor]
                                   ,[target_cycle_time_ms]
                                   ,[registered_at]
-                              FROM [NHT_DX_TO_PICO].[dbo].[SETTING]
+                              FROM [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING]
                   WHERE machine_name = ?
                   `,
                   {
@@ -151,7 +151,7 @@ const getDailySettingReport = async () => {
                   // ไม่พบ machine นี้ => INSERT ใหม่
                   await sequelize.query(
                     `
-                    INSERT INTO [NHT_DX_TO_PICO].[dbo].[SETTING] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
+                    INSERT INTO [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
                     VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                     `,
                     {
@@ -176,9 +176,9 @@ const getDailySettingReport = async () => {
                     // ไม่เหมือนกัน → del แล้ว Insert ใหม่
                     await sequelize.query(
                       `
-                      DELETE FROM [NHT_DX_TO_PICO].[dbo].[SETTING] WHERE machine_name = ?;
+                      DELETE FROM [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] WHERE machine_name = ?;
               
-                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
+                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
                       VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                       `,
                       {
