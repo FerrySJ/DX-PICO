@@ -142,8 +142,7 @@ const getDailyStatusReport = async (dateQuery) => {
         FROM
     [base_logs_status]
         WHERE
-    [mc_status] <> 'mc_run'
-            AND[mc_status] <> 'mc_alarm'
+    [mc_status] <> 'mc_alarm'
     ),
     data_result AS (
         SELECT
