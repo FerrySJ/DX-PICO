@@ -16,7 +16,7 @@ cron.schedule('1 7 * * *', async () => {
     }
 
     await getDailyStatusReport(dateToday);
-    console.log("Running data status cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
+    console.log("New Running data status cron job for date:", dateToday, dateTomorrow, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
 }, {
     timezone: "Asia/Bangkok"
 });
@@ -24,11 +24,11 @@ cron.schedule('1 7 * * *', async () => {
 const getDailyStatusReport = async (dateQuery) => {
     dateToday = dateQuery;
     let dateTomorrow = moment(dateToday).add(1, "days").format("YYYY-MM-DD");
-    console.log(dateToday, dateTomorrow);
+    console.log("Use date in getDailyStatusReport...", dateToday, dateTomorrow);
 
     try {
         let data = await sequelize.query(
-    `
+            `
     WITH[base_logs] AS (
         SELECT
     [mc_no],
@@ -310,7 +310,7 @@ const getDailyStatusReport = async (dateQuery) => {
         }
 
     } catch (error) {
-        console.log("status insert error:" , error);
+        console.log("status insert error:", error);
         return {
             data: error.message,
             success: true,
@@ -320,5 +320,28 @@ const getDailyStatusReport = async (dateQuery) => {
     }
 }
 
+
+
+const getDaily= async(dateToday)=> {
+    const date = new Date(dateToday);
+    const year = date.getFullYear();
+    const month = date.getMonth(); // เดือนเริ่มจาก 0 (มกราคม = 0)
+
+    // หาวันสุดท้ายของเดือนนี้
+    const lastDay = new Date(year, month + 1, 0).getDate();
+
+    // วนลูปทุกวันในเดือนนี้
+    for (let day = 22; day <= lastDay; day++) {
+        // สร้างวันที่ในรูปแบบ 'YYYY-MM-DD'
+        const currentDate = new Date(year, month, day);
+        const formatted = currentDate.toISOString().split('T')[0];
+        console.log(formatted);
+        await getDailyStatusReport(formatted);
+    }
+}
+
+// เรียกใช้
+// getDaily('2025-07-01');
+// // getDailyStatusReport('2025-07-01')/;
 
 module.exports = router;
