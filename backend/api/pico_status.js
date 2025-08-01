@@ -16,7 +16,7 @@ cron.schedule('1 7 * * *', async () => {
     }
 
     await getDailyStatusReport(dateToday);
-    console.log("New Running data status cron job for date:", dateToday, dateTomorrow, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
+    console.log("New Running data status cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
 }, {
     timezone: "Asia/Bangkok"
 });
@@ -342,6 +342,6 @@ const getDaily= async(dateToday)=> {
 
 // เรียกใช้
 // getDaily('2025-07-01');
-// // getDailyStatusReport('2025-07-01')/;
+// // getDailyStatusReport('2025-07-31');
 
 module.exports = router;
