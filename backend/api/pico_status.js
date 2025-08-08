@@ -305,11 +305,14 @@ const getDailyStatusReport = async (dateQuery) => {
 `
                 );
             }
+            console.log("Insert Done!");
             return {
                 data: data[0],
                 success: true,
                 message: "Update data complete",
             }
+        } else {
+            console.log("Can't insert : Length = 0");
         }
 
     } catch (error) {
@@ -327,10 +330,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
     let dateToday = dateQuery;
     let dateTomorrow = moment(dateToday).add(1, "days").format("YYYY-MM-DD");
     console.log("Use date in NewStatusGetDailyStatusReport...", dateToday, dateTomorrow);
-
     try {
         let data = await sequelize.query(
-        `
+            `
         DECLARE @start_date DATETIME = '${dateToday} 07:00:00';
 
         DECLARE @end_date DATETIME = '${dateTomorrow} 07:00:00';
@@ -511,7 +513,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             CONCAT('LINE ', line_no) AS line_name,
             UPPER([mc_no]) AS[machine_name],
         [alarm_base] AS[status_name],
-            SUM([duration_seconds]) AS[daily_duration],
+            SUM([duration_seconds]) AS[daily_duration_s],
             COUNT([alarm_base]) AS[daily_count],
             SUM(
                 CASE WHEN[shift_mn] = 'M'
@@ -519,7 +521,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [duration_seconds]
                 ELSE
                     0
-                END) AS[shift1_duration],
+                END) AS[shift1_duration_s],
             SUM(
                 CASE WHEN[shift_mn] = 'M'
                     OR[shift_mn] = 'A' THEN
@@ -533,7 +535,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [duration_seconds]
                 ELSE
                     0
-                END) AS[shift2_duration],
+                END) AS[shift2_duration_s],
             SUM(
                 CASE WHEN[shift_mn] = 'N'
                     OR[shift_mn] = 'B' THEN
@@ -546,7 +548,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [duration_seconds]
                 ELSE
                     0
-                END) AS[shift3_duration],
+                END) AS[shift3_duration_s],
             SUM(
                 CASE WHEN[shift_mn] = 'C' THEN
                     1
@@ -603,11 +605,16 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
 `
                 );
             }
+            console.log("Insert new Done!");
+
             return {
                 data: data[0],
                 success: true,
                 message: "Update data complete",
             }
+        } else {
+            console.log("Can't new insert : Length = 0");
+
         }
 
     } catch (error) {
@@ -622,7 +629,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
 }
 
 
-const getDaily= async(dateToday)=> {
+const getDaily = async (dateToday) => {
     const date = new Date(dateToday);
     const year = date.getFullYear();
     const month = date.getMonth(); // เดือนเริ่มจาก 0 (มกราคม = 0)
@@ -636,12 +643,14 @@ const getDaily= async(dateToday)=> {
         const currentDate = new Date(year, month, day);
         const formatted = currentDate.toISOString().split('T')[0];
         console.log(formatted);
-        await getDailyStatusReport(formatted);
+        // await NewStatusGetDailyStatusReport(formatted);
+        // await getDailyStatusReport(formatted);
     }
 }
 
 // เรียกใช้
 // getDaily('2025-07-01');
 // // getDailyStatusReport('2025-07-31');
+//  // NewStatusGetDailyStatusReport('2025-08-07');
 
 module.exports = router;
