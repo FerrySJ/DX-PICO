@@ -337,12 +337,12 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
 
         DECLARE @end_date DATETIME = '${dateTomorrow} 07:00:00';
 
-        DECLARE @start_date_p1 DATETIME = DATEADD (HOUR, -1, @start_date);
+        DECLARE @start_date_p1 DATETIME = DATEADD (HOUR, -2, @start_date);
 
-        -- เวลาที่ต้องการลบไป 1hr เพื่อดึง alarm ตัวก่อนหน้า --
-        DECLARE @end_date_p1 DATETIME = DATEADD (HOUR, 1, @end_date);
+        -- เวลาที่ต้องการลบไป 2hr เพื่อดึง alarm ตัวก่อนหน้า --
+        DECLARE @end_date_p1 DATETIME = DATEADD (HOUR, 2, @end_date);
 
-        -- เวลาที่ต้องการบวกไป 1hr เพื่อดึง alarm ตัวหลัง --
+        -- เวลาที่ต้องการบวกไป 2hr เพื่อดึง alarm ตัวหลัง --
         WITH[base_alarm] AS (
             -- เรียก data ทั้งหมด ก่อนและหลัง 1hr --
             SELECT
@@ -368,7 +368,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             FROM
         [data_machine_gd2].[dbo].[DATA_ALARMLIS_GD]
             WHERE
-        [occurred] BETWEEN @start_date_p1 AND @end_date_p1 -- เวลาต้อง +- ไปอีก 1hr --
+        [occurred] BETWEEN @start_date_p1 AND @end_date_p1
                 AND mc_no IN ('IC02R', 'IC03R', 'IC07R')
         ),
         [with_pairing] AS (
@@ -425,16 +425,8 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [mc_no],
         [process],
         [alarm_base],
-                CASE WHEN[occurred_start] < @start_date THEN
-                    CAST(@start_date AS datetime) -- ปัดเวลาหัวให้เท่ากับเวลาที่ต้องการ --
-                ELSE
-        [occurred_start]
-                END AS[occurred_start],
-                CASE WHEN[occurred_end] > @end_date THEN
-                    CAST(@end_date AS datetime) -- ปัดเวลาท้ายให้เท่ากับเวลาที่ต้องการ --
-                ELSE
-        [occurred_end]
-                END AS[occurred_end],
+        [occurred_start],
+        [occurred_end],
                 LAG([alarm_base]) OVER (PARTITION BY[mc_no] ORDER BY[occurred_end]) AS[previous_alarm],
                 LAG([occurred_end]) OVER (PARTITION BY[mc_no] ORDER BY[occurred_end]) AS[previous_occurred],
                 DATEDIFF (SECOND, LAG([occurred_end]) OVER (PARTITION BY[mc_no] ORDER BY[occurred_end]),[occurred_start]) AS[previous_gap_seconds],
@@ -450,9 +442,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             -- filter เอาเฉพาะเวลาที่ต้องการ , ถ้า alarm = mc_run แล้วเวลาซ้อนกับ alarm ตัวอื่นจะตัดเวลา alarm ตัวนั้นออก , ถ้าเป็น alarm1 เหลื่อม alarm2 จะตัดเวลา alarm1 ออกตามที่เหลื่อม --
             SELECT
                 *,
-                CASE WHEN[occurred_start] = @start_date THEN
-        [occurred_start]
-                WHEN[previous_gap_seconds] < 0
+                CASE WHEN[previous_gap_seconds] < 0
                     AND[previous_alarm] = 'mc_run' THEN
         [previous_occurred]
                 WHEN[previous_gap_seconds] < 0 THEN
@@ -462,8 +452,6 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 END AS[new_occurred_start]
             FROM
         [clamped_alarms]
-            WHERE
-        [occurred_end] >[occurred_start]
         ),
         [insert_stop] AS (
             -- เพิ่มเวลา STOP เข้าไปแทนที่ช่วงเวลาที่ไม่มี alarm --
@@ -478,7 +466,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             WHERE
         [next_gap_seconds] > 0
         ),
-        [final_result] AS (
+        [combine_result] AS (
             -- รวม alarm ทั้งหมดกับ STOP เข้าด้วยกัน --
             SELECT
                 UPPER([mc_no]) AS[mc_no],
@@ -497,9 +485,34 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [occurred_end]
             FROM
         [insert_stop]
+        ),
+        [edit_time_result] AS (
+            -- ปัดเวลาให้เท่ากับเวลาที่ต้องการ --
+            SELECT
+        [mc_no],
+        [process],
+        [alarm_base],
+                CASE WHEN[occurred_start] < @start_date THEN
+                    CAST(@start_date AS datetime) -- ปัดเวลาหัวให้เท่ากับเวลาที่ต้องการ --
+                ELSE
+        [occurred_start]
+                END AS[occurred_start],
+                CASE WHEN[occurred_end] > @end_date THEN
+                    CAST(@end_date AS datetime) -- ปัดเวลาท้ายให้เท่ากับเวลาที่ต้องการ --
+                ELSE
+        [occurred_end]
+                END AS[occurred_end]
+            FROM
+        [combine_result]
+        ),
+        [filter_result] AS (
+            -- หลังปัดเวลาเสร็จ filter เอาข้อมูลที่เวลาผิดทิ้ง --
+            SELECT
+                *
+            FROM
+        [edit_time_result]
             WHERE
-        [occurred_start] >= @start_date
-                AND[occurred_end] <= @end_date
+        [occurred_end] >[occurred_start]
         ),
         [summary_alarm] AS (
             -- query สำหรับเตรียม data เข้า PICO --
@@ -523,7 +536,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 m.line_no,
                 m.process AS process_Line
             FROM
-        [final_result] f
+        [filter_result] f
                 LEFT JOIN[data_machine_gd2].[dbo].[master_mc_run_parts] m ON f.mc_no = m.mc_no)
             -- Pattern data PICO --
             SELECT
@@ -587,8 +600,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [operation_day],
         [machine_name],
         [status_name]
-
-`
+            `
         );
         // STEP INSERT DATA
         if (data[0].length > 0) {
@@ -663,7 +675,7 @@ const getDaily = async (dateToday) => {
     const lastDay = new Date(year, month + 1, 0).getDate();
 
     // วนลูปทุกวันในเดือนนี้
-    for (let day = 8; day <= lastDay; day++) {
+    for (let day = 7; day <= 14; day++) {
         // สร้างวันที่ในรูปแบบ 'YYYY-MM-DD'
         const currentDate = new Date(year, month, day);
         const formatted = currentDate.toISOString().split('T')[0];
