@@ -389,17 +389,35 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [process],
         [alarm_base],
         [occurred] AS[occurred_start],
-        [occurred_next] AS[occurred_end],
-                CASE WHEN LAG([occurred_next]) OVER (PARTITION BY[mc_no] ORDER BY[occurred]) >=[occurred_next] THEN
-                    1
-                ELSE
-                    0
-                END AS[duplicate]
+        [occurred_next] AS[occurred_end]
             FROM
         [with_pairing]
             WHERE
         [alarm_type] = 'before'
                 AND[next_type] = 'after'
+        ),
+        [with_max_prev] AS (
+            SELECT
+                *,
+                MAX([occurred_end]) OVER (PARTITION BY[mc_no] ORDER BY[occurred_start] ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING) AS[max_prev_end]
+            FROM
+        [paired_alarms]
+        ),
+        [check_duplicate] AS (
+            SELECT
+        [mc_no],
+        [process],
+        [alarm_base],
+        [occurred_start],
+        [occurred_end],
+                CASE WHEN[max_prev_end] IS NOT NULL
+                    AND[occurred_end] <=[max_prev_end] THEN
+                    1
+                ELSE
+                    0
+                END AS[duplicate]
+            FROM
+        [with_max_prev]
         ),
         [clamped_alarms] AS (
             -- ตัดตัวที่เป็น alarm ซ้อนใน alarm อีกตัวออกและเพิ่มเวลาก่อนและหลังเพื่อคำนวณ --
@@ -424,7 +442,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 LEAD([occurred_start]) OVER (PARTITION BY[mc_no] ORDER BY[occurred_start]) AS[next_occurred],
                 DATEDIFF (SECOND,[occurred_end], LEAD([occurred_start]) OVER (PARTITION BY[mc_no] ORDER BY[occurred_start])) AS[next_gap_seconds]
             FROM
-        [paired_alarms]
+        [check_duplicate]
             WHERE
         [duplicate] = 0
         ),
@@ -432,7 +450,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             -- filter เอาเฉพาะเวลาที่ต้องการ , ถ้า alarm = mc_run แล้วเวลาซ้อนกับ alarm ตัวอื่นจะตัดเวลา alarm ตัวนั้นออก , ถ้าเป็น alarm1 เหลื่อม alarm2 จะตัดเวลา alarm1 ออกตามที่เหลื่อม --
             SELECT
                 *,
-                CASE WHEN[previous_gap_seconds] < 0
+                CASE WHEN[occurred_start] = @start_date THEN
+        [occurred_start]
+                WHEN[previous_gap_seconds] < 0
                     AND[previous_alarm] = 'mc_run' THEN
         [previous_occurred]
                 WHEN[previous_gap_seconds] < 0 THEN
@@ -444,8 +464,6 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [clamped_alarms]
             WHERE
         [occurred_end] >[occurred_start]
-                AND[occurred_start] >= @start_date
-                AND[occurred_end] <= @end_date
         ),
         [insert_stop] AS (
             -- เพิ่มเวลา STOP เข้าไปแทนที่ช่วงเวลาที่ไม่มี alarm --
@@ -479,6 +497,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [occurred_end]
             FROM
         [insert_stop]
+            WHERE
+        [occurred_start] >= @start_date
+                AND[occurred_end] <= @end_date
         ),
         [summary_alarm] AS (
             -- query สำหรับเตรียม data เข้า PICO --
@@ -504,13 +525,12 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             FROM
         [final_result] f
                 LEFT JOIN[data_machine_gd2].[dbo].[master_mc_run_parts] m ON f.mc_no = m.mc_no)
-            --select * from summary_alarm
             -- Pattern data PICO --
             SELECT
         [date] AS[operation_day],
                 'true' AS[is_operation_day],
                 UPPER([process]) AS[process],
-            CONCAT('LINE ', line_no) AS line_name,
+            CONCAT('LINE ', line_no) AS[line_name],
             UPPER([mc_no]) AS[machine_name],
         [alarm_base] AS[status_name],
             SUM([duration_seconds]) AS[daily_duration_s],
@@ -562,7 +582,12 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
         [process],
         [date],
         [alarm_base],
-            line_no
+        [line_no]
+        ORDER BY
+        [operation_day],
+        [machine_name],
+        [status_name]
+
 `
         );
         // STEP INSERT DATA
@@ -638,7 +663,7 @@ const getDaily = async (dateToday) => {
     const lastDay = new Date(year, month + 1, 0).getDate();
 
     // วนลูปทุกวันในเดือนนี้
-    for (let day = 22; day <= lastDay; day++) {
+    for (let day = 8; day <= lastDay; day++) {
         // สร้างวันที่ในรูปแบบ 'YYYY-MM-DD'
         const currentDate = new Date(year, month, day);
         const formatted = currentDate.toISOString().split('T')[0];
@@ -649,7 +674,7 @@ const getDaily = async (dateToday) => {
 }
 
 // เรียกใช้
-// getDaily('2025-07-01');
+// getDaily('2025-08-01'); 
 // // getDailyStatusReport('2025-07-31');
 //  // NewStatusGetDailyStatusReport('2025-08-07');
 
