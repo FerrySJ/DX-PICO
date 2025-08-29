@@ -13,15 +13,15 @@ const sequelize = new Sequelize("NHT_DX_TO_PICO", "sa", "Nhtsa@admin", {
     options: {
       instanceName: "",
       encrypt: false,
-      requestTimeout: 30000, // เพิ่ม timeout เป็น 30 วินาที
+      requestTimeout: 120000, // เพิ่ม timeout เป็น 120 วินาที
 
     },
   },
   pool: {
-    max: 5,
+    max: 10,
     min: 0,
-    acquire: 60000, // 60 seconds
-    idle: 10000,
+    acquire: 180000, // 60 seconds
+    idle: 20000,
   },
 });
 
