@@ -9,6 +9,7 @@ const sequelize = new Sequelize("NHT_DX_TO_PICO", "sa", "Nhtsa@admin", {
   logging: false,
   dialectOptions: {
     keepAlive: true, // Enables connection keep-alive
+    
     options: {
       instanceName: "",
       encrypt: false,
