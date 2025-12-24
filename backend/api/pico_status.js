@@ -599,8 +599,6 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             ,[alarm_base]
         	,[line_no]
         ORDER BY [operation_day], [machine_name], [status_name]
-
-
             `
         );
         // console.log(data);
@@ -678,19 +676,20 @@ const getDaily = async (dateToday) => {
     const lastDay = new Date(year, month + 1, 0).getDate();
 
     // วนลูปทุกวันในเดือนนี้
-    for (let day = 15; day <= lastDay; day++) {
+    for (let day = 0; day <= lastDay; day++) {
         // สร้างวันที่ในรูปแบบ 'YYYY-MM-DD'
         const currentDate = new Date(year, month, day);
         const formatted = currentDate.toISOString().split('T')[0];
         console.log(formatted);
         await NewStatusGetDailyStatusReport(formatted);
+        console.log("ok");
         // //await getDailyStatusReport(formatted);
     }
 }
  
 // เรียกใช้
-// getDaily('2025-08-01'); 
+// getDaily('2025-09-01'); 
 // // getDailyStatusReport('2025-07-31');
-// NewStatusGetDailyStatusReport('2025-08-28');
+// NewStatusGetDailyStatusReport('2025-08-31');
 
 module.exports = router;

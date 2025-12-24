@@ -3,18 +3,17 @@ const Sequelize = require("sequelize");
 //=========================================================
 const sequelize = new Sequelize("NHT_DX_TO_PICO", "sa", "Nhtsa@admin", {
   host: "10.128.16.207", // ถ้า connect db ไม่ได้ (ข้อมูลต้องใส่ถูกแล้วด้วย) ให้เปลี่ยนเป็นน "host"
-  timezone: 'utc+7',
+  timezone: "utc+7",
   dialect: "mssql",
-  
+
   logging: false,
   dialectOptions: {
     keepAlive: true, // Enables connection keep-alive
-    connectTimeout: 600000, // 60 seconds
     options: {
       instanceName: "",
       encrypt: false,
-      requestTimeout: 120000, // เพิ่ม timeout เป็น 120 วินาที
-
+      requestTimeout: 300000, // เพิ่ม timeout เป็น 5 นาที
+      connectTimeout: 600000, // 600 วินาที หรือ 10 นาที
     },
   },
   pool: {
