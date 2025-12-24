@@ -690,6 +690,6 @@ const getDaily = async (dateToday) => {
 // เรียกใช้
 // getDaily('2025-09-01'); 
 // // getDailyStatusReport('2025-07-31');
-// NewStatusGetDailyStatusReport('2025-08-31');
+// NewStatusGetDailyStatusReport('2025-12-23');
 
 module.exports = router;
