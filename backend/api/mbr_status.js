@@ -250,6 +250,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 [date] AS [operation_day]
                 ,'true' AS [is_operation_day]
                 ,UPPER([process]) AS [process]
+                ,CAST(RIGHT([mc_no], 2) AS INT)  AS line_name
                 ,UPPER([mc_no]) AS [machine_name]
                 ,[status_alarm] AS [status_name]
                 ,SUM([duration_seconds]) AS [daily_duration_s]
@@ -354,5 +355,6 @@ const getDaily = async (dateToday) => {
  
 // เรียกใช้
 // getDaily('2025-09-01'); 
+// NewStatusGetDailyStatusReport('2025-12-24');
 
 module.exports = router;

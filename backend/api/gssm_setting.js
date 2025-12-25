@@ -16,7 +16,7 @@ cron.schedule('1 7 * * *', async () => {
     }
 
     await getDailySettingReport();
-    console.log("MBR - Running data setting cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
+    console.log("GSSM - Running data setting cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
 }, {
     timezone: "Asia/Bangkok"
 });
@@ -24,17 +24,13 @@ cron.schedule('1 7 * * *', async () => {
 const getDailySettingReport = async () => {
     try {
         let data = await sequelize.query(
-            `SELECT
-            [process],
-            CONCAT('LINE ', line_no) AS line_no,
-        a.[mc_no], 1 AS [mc_order],
-            '7:00:00' AS shift_start,
-            1 AS count_f,
-            target_ct*1000 AS ct
-        FROM
-            [data_machine_assy1].[dbo].[master_mc_run_parts] a
-		LEFT JOIN  [data_machine_assy1].[dbo].[DATA_MASTER_ASSY] b
-		ON a.mc_no = b.mc_no`
+            `SELECT 'GSSM' AS [process],
+                CONCAT('LINE ', (CAST(RIGHT([mc_no], 2) AS INT)))  AS line_no,
+                [mc_no], 1 AS [mc_order],
+                '7:00:00' AS shift_start,
+                1 AS count_f,
+                target_ct*1000 AS ct
+            FROM [data_machine_gssm].[dbo].[DATA_MASTER_GSSM]`
            )
            
         // STEP CHECK/INSERT DATA
@@ -53,7 +49,7 @@ const getDailySettingReport = async () => {
                                   ,[count_factor]
                                   ,[target_cycle_time_ms]
                                   ,[registered_at]
-                              FROM [NHT_DX_TO_PICO].[dbo].[MBR_SETTING]
+                              FROM [NHT_DX_TO_PICO].[dbo].[GSSM_SETTING]
                   WHERE machine_name = ?
                   `,
                   {
@@ -66,7 +62,7 @@ const getDailySettingReport = async () => {
                   // ไม่พบ machine นี้ => INSERT ใหม่
                   await sequelize.query(
                     `
-                    INSERT INTO [NHT_DX_TO_PICO].[dbo].[MBR_SETTING] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
+                    INSERT INTO [NHT_DX_TO_PICO].[dbo].[GSSM_SETTING] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
                     VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                     `,
                     {
@@ -86,14 +82,14 @@ const getDailySettingReport = async () => {
                     Number(existing.target_cycle_time_ms) === Number(ct);
               
                   if (!isSame) {
-                    console.log("MBR - !isSame", !isSame);
+                    console.log("GSSM - !isSame", !isSame);
                     
                     // ไม่เหมือนกัน → del แล้ว Insert ใหม่
                     await sequelize.query(
                       `
-                      DELETE FROM [NHT_DX_TO_PICO].[dbo].[MBR_SETTING] WHERE machine_name = ?;
+                      DELETE FROM [NHT_DX_TO_PICO].[dbo].[GSSM_SETTING] WHERE machine_name = ?;
               
-                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[MBR_SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
+                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[GSSM_SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
                       VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                       `,
                       {
@@ -113,7 +109,7 @@ const getDailySettingReport = async () => {
         }
 
     } catch (error) {
-        console.log("MBR - status insert error:" , error);
+        console.log("GSSM - status insert error:" , error);
         return {
             data: error.message,
             success: true,

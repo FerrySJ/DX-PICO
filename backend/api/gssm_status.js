@@ -16,18 +16,16 @@ cron.schedule('1 7 * * *', async () => {
         dateToday = moment().tz('Asia/Bangkok').format("YYYY-MM-DD");
     }
 
-    // await getDailyStatusReport(dateToday);
     await NewStatusGetDailyStatusReport(dateToday); // For All M/C 
-    console.log("2ND G/D - New Running data status cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
+    console.log("GSSM - New Running data status cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
 }, {
     timezone: "Asia/Bangkok"
 });
 
-
 const NewStatusGetDailyStatusReport = async (dateQuery) => {
     let dateToday = dateQuery;
     let dateTomorrow = moment(dateToday).add(1, "days").format("YYYY-MM-DD");
-    console.log("2ND G/D - Use date in NewStatusGetDailyStatusReport...", dateToday, dateTomorrow);
+    console.log("GSSM - Use date in NewStatusGetDailyStatusReport...", dateToday, dateTomorrow);
     try {
         let data = await sequelize.query(
             `DECLARE @start_date DATETIME = '${dateToday} 07:00'; -- เปลี่ยนวันที่ด้วย
@@ -53,10 +51,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                         WHEN RIGHT([alarm], 1) = '_' THEN 'after'
                         ELSE 'before'
                     END AS [alarm_type]
-                FROM [data_machine_gd2].[dbo].[DATA_ALARMLIS_GD]
+                FROM [data_machine_gssm].[dbo].[DATA_ALARMLIST_GSSM]
                 WHERE [occurred] BETWEEN @start_date_p1 AND @end_date_p1
-            )
-			,
+            ),
             [with_pairing] AS (
                 SELECT *,
                     LEAD([occurred]) OVER (PARTITION BY [mc_no], [status_alarm] ORDER BY [occurred]) AS [occurred_next],
@@ -77,7 +74,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                     [mc_no],
                     [registered],
                     CAST(broker AS FLOAT) AS [broker_f]
-                FROM [data_machine_gd2].[dbo].[MONITOR_IOT]
+                FROM [data_machine_gssm].[dbo].[MONITOR_IOT]
                 WHERE registered BETWEEN @start_date_p1 AND @end_date_p1
             ),
             [mark] AS (
@@ -222,7 +219,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             [filter_result] AS (
                 SELECT
                     *,
-                    'MBR' AS [process] -- add process เอง
+                    'GSSM' AS [process] -- add process เอง
                 FROM [edit_time_result]
                 WHERE
                     [occurred_end] > [occurred_start]
@@ -234,8 +231,6 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                     status_alarm,
                     occurred_start,
                     occurred_end,
-					m.line_no,
-
                 CASE 
                     WHEN DATEPART(HOUR, [occurred_start]) < 7 THEN 
                         CONVERT(date, DATEADD(DAY, -1, [occurred_start]))
@@ -248,7 +243,6 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 END AS [shift_mn],
                 DATEDIFF(SECOND, [occurred_start], [occurred_end]) AS [duration_seconds]
                 FROM [filter_result] f
-				LEFT JOIN[data_machine_gd2].[dbo].[master_mc_run_parts] m ON f.mc_no = m.mc_no
             )
                     
             -- Pattern data PICO --
@@ -256,7 +250,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 [date] AS [operation_day]
                 ,'true' AS [is_operation_day]
                 ,UPPER([process]) AS [process]
-				,CONCAT('LINE ', line_no) AS line_name
+                ,CONCAT('LINE ', CAST(RIGHT([mc_no], 2) AS INT))  AS line_name
                 ,UPPER([mc_no]) AS [machine_name]
                 ,[status_alarm] AS [status_name]
                 ,SUM([duration_seconds]) AS [daily_duration_s]
@@ -273,7 +267,6 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 ,[process]
                 ,[date]
                 ,[status_alarm]
-				,[line_no]
             ORDER BY [operation_day], [machine_name], [status_name]`
         );
         // console.log(data);
@@ -284,7 +277,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             for (let index = 0; index < result.length; index++) {
                 await sequelize.query(
                     `
-            INSERT INTO[NHT_DX_TO_PICO].[dbo].[GD2ND_DAILY_STATUS_REPORT] ([operation_day],[is_operation_day],[process],[line_name],[machine_name],[status_name],[daily_duration_s],[daily_count],[shift1_duration_s],[shift1_count],[shift2_duration_s],[shift2_count],[shift3_duration_s],[shift3_count],[registered_at])
+            INSERT INTO [NHT_DX_TO_PICO].[dbo].[GSSM_DAILY_STATUS_REPORT] ([operation_day],[is_operation_day],[process],[line_name],[machine_name],[status_name],[daily_duration_s],[daily_count],[shift1_duration_s],[shift1_count],[shift2_duration_s],[shift2_count],[shift3_duration_s],[shift3_count],[registered_at])
             SELECT
                 '${result[index].operation_day}',
                 '${result[index].is_operation_day}',
@@ -306,7 +299,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                     SELECT
                         1
                     FROM
-            [NHT_DX_TO_PICO].[dbo].[GD2ND_DAILY_STATUS_REPORT]
+            [NHT_DX_TO_PICO].[dbo].[GSSM_DAILY_STATUS_REPORT]
                     WHERE
             [operation_day] = '${result[index].operation_day}'
                         AND [line_name] = '${result[index].line_name}'
@@ -314,11 +307,10 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                         AND [status_name] = '${result[index].status_name}'
                         AND [daily_duration_s] = ${result[index].daily_duration_s}
                         AND [daily_count] = ${result[index].daily_count});
-
 `
                 );
             }
-            console.log("2ND G/D - Insert new Done!");
+            console.log("GSSM - Insert new Done!");
 
             return {
                 data: data[0],
@@ -326,12 +318,12 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 message: "Update data complete",
             }
         } else {
-            console.log("2ND G/D - Can't new insert : Length = 0");
- 
+            console.log("GSSM - Can't new insert : Length = 0");
+
         }
 
     } catch (error) {
-        console.log("2ND G/D - new status insert error:", error);
+        console.log("GSSM - new status insert error:", error);
         return {
             data: error.message,
             success: true,
@@ -357,14 +349,12 @@ const getDaily = async (dateToday) => {
         const formatted = currentDate.toISOString().split('T')[0];
         console.log(formatted);
         await NewStatusGetDailyStatusReport(formatted);
-        console.log("2ND G/D - ok");
-        // //await getDailyStatusReport(formatted);
+        console.log("ok");
     }
 }
  
 // เรียกใช้
 // getDaily('2025-09-01'); 
-// // getDailyStatusReport('2025-07-31');
-// NewStatusGetDailyStatusReport('2025-12-03');
+// NewStatusGetDailyStatusReport('2025-12-24');
 
 module.exports = router;
