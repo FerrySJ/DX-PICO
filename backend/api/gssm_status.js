@@ -310,7 +310,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
 `
                 );
             }
-            console.log("GSSM - Insert new Done!");
+            console.log("GSSM - Insert status new Done!");
 
             return {
                 data: data[0],
@@ -355,6 +355,6 @@ const getDaily = async (dateToday) => {
  
 // เรียกใช้
 // getDaily('2025-09-01'); 
-// NewStatusGetDailyStatusReport('2025-12-24');
+// NewStatusGetDailyStatusReport('2025-12-25');
 
 module.exports = router;

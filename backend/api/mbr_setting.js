@@ -24,17 +24,17 @@ cron.schedule('1 7 * * *', async () => {
 const getDailySettingReport = async () => {
     try {
         let data = await sequelize.query(
-            `SELECT
-            [process],
-            CONCAT('LINE ', line_no) AS line_no,
-        a.[mc_no], 1 AS [mc_order],
-            '7:00:00' AS shift_start,
-            1 AS count_f,
-            target_ct*1000 AS ct
-        FROM
-            [data_machine_assy1].[dbo].[master_mc_run_parts] a
-		LEFT JOIN  [data_machine_assy1].[dbo].[DATA_MASTER_ASSY] b
-		ON a.mc_no = b.mc_no`
+            `SELECT DISTINCT(a.[mc_no]),
+              'MBR' AS [process],
+		          CONCAT('LINE ', (CAST(RIGHT(a.[mc_no], 2) AS INT)))  AS line_no,
+              1 AS [mc_order],
+              '7:00:00' AS shift_start,
+              1 AS count_f,
+              target_ct*1000 AS ct
+            FROM [data_machine_assy1].[dbo].[DATA_PRODUCTION_ASSY] a
+		        LEFT JOIN  [data_machine_assy1].[dbo].[DATA_MASTER_ASSY] b
+		        ON a.mc_no = b.mc_no
+		        ORDER BY a.mc_no`
            )
            
         // STEP CHECK/INSERT DATA
@@ -92,12 +92,19 @@ const getDailySettingReport = async () => {
                     await sequelize.query(
                       `
                       DELETE FROM [NHT_DX_TO_PICO].[dbo].[MBR_SETTING] WHERE machine_name = ?;
-              
-                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[MBR_SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
-                      VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                       `,
                       {
-                        replacements: [process, line_no, mc_no, mc_order, shift_start, count_f, ct]
+                        replacements: [mc_no],
+                      }
+                    );
+
+                    await sequelize.query(
+                      `
+                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[MBR_SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
+                      VALUES ( ?, ?, ?, ?, GETDATE())
+                      `,
+                      {
+                        replacements: [process, line_no, mc_no, ct]
                       }
                     );
                   }
