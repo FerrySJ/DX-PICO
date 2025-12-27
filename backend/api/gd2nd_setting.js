@@ -192,28 +192,33 @@ const getDailySettingReport = async () => {
             Number(existing.target_cycle_time_ms) === Number(ct);
 
           if (!isSame) {
-            console.log("!isSame", !isSame);
+            console.log("GD2ND - !isSame", !isSame);
 
             // ไม่เหมือนกัน → del แล้ว Insert ใหม่
-            
-            await sequelize.query(`DELETE FROM [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] WHERE machine_name = ?`, {
-              replacements: [mc_no],
-            });
+
+            await sequelize.query(
+              `DELETE FROM [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] WHERE machine_name = ?`,
+              {
+                replacements: [mc_no],
+              }
+            );
             await sequelize.query(
               `
-                      INSERT INTO [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] ([process], [line_name], [machine_name], [target_cycle_time_ms], [registered_at])
-                      VALUES ( ?, ?, ?, ?, GETDATE())
-                      `,
+                    INSERT INTO [NHT_DX_TO_PICO].[dbo].[GD2ND_SETTING] ([process], [line_name], [machine_name], [machine_order], [shift1_start_time], [count_factor], [target_cycle_time_ms], [registered_at])
+                    VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
+                    `,
               {
                 replacements: [
                   process,
                   line_no,
                   mc_no,
+                  mc_order,
+                  shift_start,
+                  count_f,
                   ct,
                 ],
               }
             );
-
           }
           // ถ้าเหมือน => ไม่ต้องทำอะไร
         }

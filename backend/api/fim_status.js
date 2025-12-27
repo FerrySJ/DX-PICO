@@ -17,7 +17,7 @@ cron.schedule('1 7 * * *', async () => {
     }
 
     await NewStatusGetDailyStatusReport(dateToday); // For All M/C 
-    console.log("AN - New Running data status cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
+    console.log("FIM - New Running data status cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
 }, {
     timezone: "Asia/Bangkok"
 });
@@ -25,10 +25,11 @@ cron.schedule('1 7 * * *', async () => {
 const NewStatusGetDailyStatusReport = async (dateQuery) => {
     let dateToday = dateQuery;
     let dateTomorrow = moment(dateToday).add(1, "days").format("YYYY-MM-DD");
-    console.log("AN - Use date in NewStatusGetDailyStatusReport...", dateToday, dateTomorrow);
+    console.log("FIM - Use date in NewStatusGetDailyStatusReport...", dateToday, dateTomorrow);
     try {
         let data = await sequelize.query(
-            `DECLARE @start_date DATETIME = '${dateToday} 07:00';
+            `
+            DECLARE @start_date DATETIME = '${dateToday} 07:00';
 
             -- เปลี่ยนวันที่ด้วย
             DECLARE @TargetEndDate DATETIME = '${dateTomorrow} 07:00';
@@ -67,7 +68,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                         'before'
                     END AS[alarm_type]
                 FROM
-            [data_machine_an2].[dbo].[DATA_ALARMLIS_AN]
+            [data_machine_fim].[dbo].[DATA_ALARMLIS_FIM]
                 WHERE
             [occurred] BETWEEN @start_date_p1 AND @end_date_p1
             ),
@@ -99,7 +100,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             [registered],
                     CAST(broker AS float) AS[broker_f]
                 FROM
-            [data_machine_an2].[dbo].[MONITOR_IOT]
+            [data_machine_fim].[dbo].[MONITOR_IOT]
                 WHERE
                     registered BETWEEN @start_date_p1 AND @end_date_p1
             ),
@@ -328,7 +329,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             [filter_result] AS (
                 SELECT
                     *,
-                    'AN' AS[process] -- add process เอง
+                    'FIM' AS[process] -- add process เอง
                 FROM
             [edit_time_result]
                 WHERE
@@ -426,7 +427,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             for (let index = 0; index < result.length; index++) {
                 await sequelize.query(
                     `
-            INSERT INTO [NHT_DX_TO_PICO].[dbo].[AN_DAILY_STATUS_REPORT] ([operation_day],[is_operation_day],[process],[line_name],[machine_name],[status_name],[daily_duration_s],[daily_count],[shift1_duration_s],[shift1_count],[shift2_duration_s],[shift2_count],[shift3_duration_s],[shift3_count],[registered_at])
+            INSERT INTO [NHT_DX_TO_PICO].[dbo].[FIM_DAILY_STATUS_REPORT] ([operation_day],[is_operation_day],[process],[line_name],[machine_name],[status_name],[daily_duration_s],[daily_count],[shift1_duration_s],[shift1_count],[shift2_duration_s],[shift2_count],[shift3_duration_s],[shift3_count],[registered_at])
             SELECT
                 '${result[index].operation_day}',
                 '${result[index].is_operation_day}',
@@ -448,7 +449,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                     SELECT
                         1
                     FROM
-            [NHT_DX_TO_PICO].[dbo].[AN_DAILY_STATUS_REPORT]
+            [NHT_DX_TO_PICO].[dbo].[FIM_DAILY_STATUS_REPORT]
                     WHERE
             [operation_day] = '${result[index].operation_day}'
                         AND [line_name] = '${result[index].line_name}'
@@ -459,7 +460,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
 `
                 );
             }
-            console.log("AN - Insert new Done!");
+            console.log("FIM - Insert new Done!");
 
             return {
                 data: data[0],
@@ -467,12 +468,12 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 message: "Update data complete",
             }
         } else {
-            console.log("AN - Can't new insert : Length = 0");
+            console.log("FIM - Can't new insert : Length = 0");
 
         }
 
     } catch (error) {
-        console.log("AN - new status insert error:", error);
+        console.log("FIM - new status insert error:", error);
         return {
             data: error.message,
             success: true,
