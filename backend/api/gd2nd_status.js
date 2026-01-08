@@ -222,7 +222,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
             [filter_result] AS (
                 SELECT
                     *,
-                    'MBR' AS [process] -- add process เอง
+                    'GD' AS [process] -- add process เอง
                 FROM [edit_time_result]
                 WHERE
                     [occurred_end] > [occurred_start]
