@@ -22,10 +22,10 @@ app.use("/api/fim_setting", require("./api/fim_setting"));
 app.use("/api/fim_status", require("./api/fim_status"));
 app.use("/api/fim_daily_report", require("./api/fim_daily_report"));
 
-// ANT NHT
-app.use("/api/ant_setting", require("./api/ant_setting"));
-app.use("/api/ant_status", require("./api/ant_status"));
-app.use("/api/ant_daily_report", require("./api/ant_daily_report"));
+// AN NHT
+app.use("/api/an_setting", require("./api/an_setting"));
+app.use("/api/an_status", require("./api/an_status"));
+app.use("/api/an_daily_report", require("./api/an_daily_report"));
 
 // AOD NHT
 app.use("/api/aod_setting", require("./api/aod_setting"));
