@@ -18,7 +18,7 @@ cron.schedule('1 7 * * *', async () => {
     }
 
     await getDailyReport(dateToday);
-    console.log("NAT - MBR - Running data reprod cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
+    console.log("NHT - MBR - Running data reprod cron job for date:", dateToday, hours, moment().tz('Asia/Bangkok').format("YYYY-MM-DD HH:mm:ss"));
 }, {
     timezone: "Asia/Bangkok"
 });
@@ -26,7 +26,7 @@ cron.schedule('1 7 * * *', async () => {
 const getDailyReport = async (dateQuery) => {
     let dateToday = dateQuery;
     let dateTomorrow = moment(dateToday).add(1, "days").format("YYYY-MM-DD");
-    console.log("NAT - MBR - prod...", dateToday, dateTomorrow);
+    console.log("NHT - MBR - prod...", dateToday, dateTomorrow);
 
     try {
         let data = await sequelize.query(`
@@ -149,7 +149,7 @@ const getDailyReport = async (dateQuery) => {
             }
         }
     } catch (error) {
-        console.log("NAT - MBR - prod insert error:", error);
+        console.log("NHT - MBR - prod insert error:", error);
         return {
             data: error.message,
             success: true,

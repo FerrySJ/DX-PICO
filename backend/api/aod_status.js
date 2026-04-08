@@ -3,7 +3,6 @@ const express = require("express");
 const sequelize = require("../instance/db");
 const cron = require('node-cron');
 const moment = require('moment-timezone');
-const dbNHT = require("../instance/db_nat");
 
 const router = express.Router();
 
@@ -28,9 +27,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
     let dateTomorrow = moment(dateToday).add(1, "days").format("YYYY-MM-DD");
     console.log("NHT - AOD - Use date in NewStatusGetDailyStatusReport...", dateToday, dateTomorrow);
     try {
-        let data = await dbNHT.query(`
+        let data = await sequelize.query(`
             DECLARE @start_date DATETIME = '${dateToday} 06:00'; -- เปลี่ยนวันที่ด้วย
-            DECLARE @TargetEndDate DATETIME = ${dateTomorrow} 06:00'; -- เปลี่ยนวันที่ด้วย
+            DECLARE @TargetEndDate DATETIME = '${dateTomorrow} 06:00'; -- เปลี่ยนวันที่ด้วย
             DECLARE @end_date DATETIME = CASE WHEN @TargetEndDate > GETDATE()
                                             THEN GETDATE()
                                             ELSE @TargetEndDate
@@ -356,6 +355,6 @@ const getDaily = async (dateToday) => {
  
 // เรียกใช้
 // getDaily('2025-09-01'); 
-// NewStatusGetDailyStatusReport('2025-12-26');
+// NewStatusGetDailyStatusReport('2026-04-07');
 
 module.exports = router;

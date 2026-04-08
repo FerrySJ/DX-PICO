@@ -30,7 +30,7 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
     try {
         let data = await dbNAT.query(`
             DECLARE @start_date DATETIME = '${dateToday} 06:00'; -- เปลี่ยนวันที่ด้วย
-            DECLARE @TargetEndDate DATETIME = ${dateTomorrow} 06:00'; -- เปลี่ยนวันที่ด้วย
+            DECLARE @TargetEndDate DATETIME = '${dateTomorrow} 06:00'; -- เปลี่ยนวันที่ด้วย
             DECLARE @end_date DATETIME = CASE WHEN @TargetEndDate > GETDATE()
                                             THEN GETDATE()
                                             ELSE @TargetEndDate
@@ -392,6 +392,6 @@ const getDaily = async (dateToday) => {
  
 // เรียกใช้
 // getDaily('2025-09-01'); 
-// NewStatusGetDailyStatusReport('2025-12-26');
+// NewStatusGetDailyStatusReport('2026-04-07');
 
 module.exports = router;

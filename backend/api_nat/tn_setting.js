@@ -39,7 +39,7 @@ const getDailySettingReport = async () => {
                 LEFT JOIN [nat_mc_mcshop_tn].[dbo].[DATA_MASTER_TN] b ON a.mc_no = b.mc_no
             )
             SELECT * FROM [rn]
-            where rn = 1
+            where rn = 1 AND mc_no != 'TB16'
             ORDER BY [mc_no]
         `)
            
