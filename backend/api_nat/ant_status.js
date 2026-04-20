@@ -80,7 +80,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 [occurred],
                 [alarm],
                 [process],
-                [status_alarm],
+                CASE WHEN [status_alarm] = 'RUN REAR' THEN 'RUN'
+					ELSE [status_alarm]
+				END AS [status_alarm],
                 [alarm_type]
               FROM [base_alarm_r]
               UNION
@@ -89,7 +91,9 @@ const NewStatusGetDailyStatusReport = async (dateQuery) => {
                 [occurred],
                 [alarm],
                 [process],
-                [status_alarm],
+                CASE WHEN [status_alarm] = 'RUN FRONT' THEN 'RUN'
+					ELSE [status_alarm]
+				END AS [status_alarm],
                 [alarm_type]
               FROM [base_alarm_f]
 			),
