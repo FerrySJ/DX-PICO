@@ -75,7 +75,7 @@ const getDailySettingReport = async () => {
                     VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                     `,
                     {
-                      replacements: [process, line_no, mc_no, mc_order, shift_start, count_f, ct]
+                      replacements: [process, line_no, mc_no, mc_order, shift_start, count_f ?? 1, ct || 0]
                     }
                   );
                 } else {
@@ -111,7 +111,7 @@ const getDailySettingReport = async () => {
                       VALUES (?, ?, ?, ?, GETDATE())
                       `,
                       {
-                        replacements: [process, line_no, mc_no, ct]
+                        replacements: [process, line_no, mc_no, ct || 0]
                       }
                     );
                   }

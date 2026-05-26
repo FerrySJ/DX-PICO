@@ -174,8 +174,8 @@ const getDailySettingReport = async () => {
                 mc_no,
                 mc_order,
                 shift_start,
-                count_f,
-                ct,
+                count_f ?? 1,
+                ct || 0,
               ],
             }
           );
