@@ -34,8 +34,8 @@ const getDailySettingReport = async () => {
                     b.[ring_factor] AS [count_f],
                     b.[target_ct] * 1000 AS [ct],
                     ROW_NUMBER() OVER (PARTITION BY a.[mc_no] ORDER BY b.[registered] DESC) AS rn
-                FROM [data_machine_assy1].[dbo].[DATA_PRODUCTION_MBR] a
-                LEFT JOIN [data_machine_assy1].[dbo].[DATA_MASTER_MBR] b ON a.mc_no = b.mc_no
+                FROM [data_machine_assy1].[dbo].[DATA_PRODUCTION_ASSY] a
+                LEFT JOIN [data_machine_assy1].[dbo].[DATA_MASTER_ASSY] b ON a.mc_no = b.mc_no
             )
             SELECT * FROM [rn]
             where rn = 1
@@ -74,7 +74,7 @@ const getDailySettingReport = async () => {
                     VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                     `,
                     {
-                      replacements: [process, line_no, mc_no, mc_order, shift_start, count_f, ct]
+                      replacements: [process, line_no, mc_no, mc_order, shift_start, count_f ?? 1, ct || 0]
                     }
                   );
                 } 
@@ -109,8 +109,8 @@ const getDailySettingReport = async () => {
                       VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE())
                     `,
                     {
-                      replacements: [process, line_no, mc_no, mc_order, shift_start, count_f, ct]
-                      }
+                      replacements: [process, line_no, mc_no, mc_order, shift_start, count_f ?? 1, ct || 0]
+                    }
                     );
                   }
                   // ถ้าเหมือน => ไม่ต้องทำอะไร
